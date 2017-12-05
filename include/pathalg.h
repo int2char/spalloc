@@ -190,11 +190,10 @@ class dijkstor:public algbase{
 				{
 					weight[nei[s][j]%pesize]*=-1;
 					value[edges[nei[s][j]].t]=1;
-
 				}
         	int mark=1;
         	int cc=1;
-        	cout<<"before mark"<<endl;
+        	cout<<"before mark here"<<endl;
         	while(mark==1)
         	{
         		mark=0;

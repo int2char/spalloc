@@ -85,8 +85,17 @@ class Graph
 				int t=edges[i].t+n*(k+1);
             	exedges.push_back(edge(s,t,1));
             }
-            cout<<extenedges.size()<<" "<<edges.size()<<endl;
-            router.init(exedges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            vector<edge> pedges;
+            for(int i=0;i<edges.size();i++)
+            {
+                for(int k=0;k<width;k++)
+                	{
+                		int s=edges[i].s+n*k;
+                		int t=edges[i].t+n*(k+1);
+                		pedges.push_back(edge(s,t,1));
+                	}
+            }
+            router.init(pedges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
         };
 };
 class ERGraph:public Graph{

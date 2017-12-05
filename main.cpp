@@ -4,11 +4,11 @@
 int main()
 {
     struct timeval starttime, endtime;
-    //parallelor d=parallelor();
-    dijkstor d=dijkstor();
-    ERGraph graph(1000,1,d);
+    parallelor d=parallelor();
+    //dijkstor d=dijkstor();
+    ERGraph graph(800,1,d);
     gettimeofday(&starttime,NULL);
-    graph.prepush(33,888,1);
+    graph.prepush(33,88,1);
     gettimeofday(&endtime,NULL);
     cout<<"time is:"<<endtime.tv_sec- starttime.tv_sec<<endl;
 }

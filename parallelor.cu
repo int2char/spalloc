@@ -325,8 +325,113 @@ vector<int> parallelor:: routalg(int s,int t,int bw)
 	}
 	return vector<int>();
 };
+int fls(int x)
+{
+	int position;
+	int i;
+	if(x!=0)
+		for(i=(x>>1),position=0;i!=0;++position)
+			i>>=1;
+	else
+		position=-1;
+	return pow(2,position+1);
+}
+__global__ void push(int*dev_h,int*dev_v,int*dev_ev,int*dev_es,int*dev_et,int W)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	__shared__ flows[WORK_SIZE];
+	__shared__ biao[WORK_SIZE];
+	int eid=i/W;
+	int offset=i%W;
+	biao[i]=biao[offset];
+	int s=dev_s[eid]+offset;
+	int t=dev_t[eid]+offset;
+	if(dev_ev[eid]>0&&dev_v[s]>0&&dev_h[s]==dev_h[t]+1)
+		flows[i]=1,dev_ev[eid]*=-1;
+	if(dev_ev[eid]<0&&dev_t[s]>0&&dev_h[t]==dev_h[s]+1)
+		flows[i]=-1,dev_ev[eid]*=-1;
+	//guiyue;
+	int start=eid*W;
+	for(int s=W;s>1;s=(s+1)/2)
+	{
+		if(i-start<s/2)
+		{
+			if(abs(flows[i])<abs(flows[i+(s+1)/2]))
+				flows[i]=flows[i+(s+1)/2],biao[i]=biao[i+(s+1)/2];
+		}
+	}
+	if(i%W==0)
+	{
+		if(flows[i]>0)
+			dev_v[t+biao[i]]++;
+		if(flows[i]<0)
+			dev_v[s+biao[i]]++
+	}
+
+
+
+
+
+}
+__global__ void relable(int*dev_h,int*dev_v,int*dev_ev,int*dev_es,int*dev_et)
+{
+
+}
 void parallelor::prepush(int s,int t,int bw)
 {
-	cout<<"size is: "<<aedges[0].s<<endl;
+	cout<<"prepush ing"<<endl;
+	int W=fls(WD+1);
+	int*dev_h,*dev_v,*dev_ev,*dev_es,*dev_et;
+	int*h=new int[W*pnodesize];
+	int*v=new int[W*pnodesize];
+	int*ev=new int[pesize];
+	int*es=new int[pesize];
+	int*et=new int[pesize];
+	for(int i=0;i<edges.size();i++)
+	{
+		ev[i]=1;
+		es[i]=edges[i].s;
+		et[i]=edges[i].t;
+	}
+	for(int i=0;i<W*pnodesize;i++)
+	{
+		h[i]=0;
+		v[i]=0;
+	}
+	for(int i=s*W;i<s*W+WD;i++)
+	{
+		h[i]=W*pnodesize;
+	}
+	cudaMalloc((void**)&dev_h,W*pnodesize*sizeof(int));
+	cudaMalloc((void**)&dev_v,W*pnodesize*sizeof(int));
+	cudaMalloc((void**)&dev_ev,pesize*sizeof(int));
+	cudaMalloc((void**)&dev_es,pesize*sizeof(int));
+	cudaMalloc((void**)&dev_et,pesize*sizeof(int));
+	cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpy(ev,dev_ev,pesize*sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpy(et,dev_et,pesize*sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpy(es,dev_es,pesize*sizeof(int),cudaMemcpyDeviceToHost);
+	/*vector<vector<int>>nei(nodenum+2,vector<int>());
+	vector<int>height(nodenum+2,0);
+	vector<int>value(nodenum+2,0);
+	vector<int>weight(pesize,1);
+	for(int i=0;i<edges.size();i++)
+	{
+		nei[edges[i].s].push_back(i);
+		nei[edges[i].t].push_back(i);
+	}
+	for(int i=0;i<=WD;i++)
+		height[s+pnodesize*i]=nodenum;
+	for(int j=0;j<nei[s].size();j++)
+		if(edges[nei[s][j]].s==s)
+		{
+			weight[nei[s][j]%pesize]*=-1;
+			value[edges[nei[s][j]].t]=1;
+
+		}
+	int mark=1;
+	int cc=1;
+	cout<<"before mark"<<endl;*/
 
 };
