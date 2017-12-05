@@ -259,6 +259,7 @@ class parallelor:public algbase
 		int *dev_value,*value;
 		int *dev_height,*height;
 		vector<vector<int>>neibour;
+		vector<edge>edges;
 		void allocate(int maxn,int maxedges);
 		void copydata(int s,vector<edge>&edges,int nodenum);
 		void dellocate();

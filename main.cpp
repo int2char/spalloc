@@ -8,6 +8,7 @@ int main()
     //dijkstor d=dijkstor();
     ERGraph graph(800,1,d);
     gettimeofday(&starttime,NULL);
+    cout<<"prepushing "<<endl;
     graph.prepush(33,88,1);
     gettimeofday(&endtime,NULL);
     cout<<"time is:"<<endtime.tv_sec- starttime.tv_sec<<endl;

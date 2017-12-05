@@ -133,6 +133,7 @@ void parallelor::init(vector<edge>&extenedges,vector<vector<int>>&relate,ginfo g
 	maxbw=500;
 	//allocate in cuda
 	edgesize=extenedges.size();nodenum=ginf.enodesize;
+	edges=extenedges;
 	pesize=ginf.pesize;pnodesize=ginf.pnodesize;
 	cout<<"es "<<edgesize<<"  pes"<<pesize<<endl;
 	dsize=ML*nodenum,presize=ML*nodenum;
@@ -336,57 +337,51 @@ int fls(int x)
 		position=-1;
 	return pow(2,position+1);
 }
-__global__ void push(int*dev_h,int*dev_v,int*dev_ev,int*dev_es,int*dev_et,int W)
+__global__ void push(int*dev_h,int*dev_v,int*dev_ev,int*dev_s,int*dev_t,int W,int *mark)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
-	__shared__ flows[WORK_SIZE];
-	__shared__ biao[WORK_SIZE];
+	__shared__  int flows[WORK_SIZE];
+	__shared__  int biao[WORK_SIZE];
 	int eid=i/W;
 	int offset=i%W;
-	biao[i]=biao[offset];
+	biao[i]=offset;
 	int s=dev_s[eid]+offset;
 	int t=dev_t[eid]+offset;
 	if(dev_ev[eid]>0&&dev_v[s]>0&&dev_h[s]==dev_h[t]+1)
 		flows[i]=1,dev_ev[eid]*=-1;
 	if(dev_ev[eid]<0&&dev_t[s]>0&&dev_h[t]==dev_h[s]+1)
 		flows[i]=-1,dev_ev[eid]*=-1;
-	//guiyue;
 	int start=eid*W;
 	for(int s=W;s>1;s=(s+1)/2)
 	{
 		if(i-start<s/2)
-		{
 			if(abs(flows[i])<abs(flows[i+(s+1)/2]))
 				flows[i]=flows[i+(s+1)/2],biao[i]=biao[i+(s+1)/2];
-		}
 	}
 	if(i%W==0)
 	{
 		if(flows[i]>0)
-			dev_v[t+biao[i]]++;
+			dev_v[t+biao[i]]++,*mark=1;
 		if(flows[i]<0)
-			dev_v[s+biao[i]]++
+			dev_v[s+biao[i]]++,*mark=1;
 	}
-
-
-
-
-
-}
+};
 __global__ void relable(int*dev_h,int*dev_v,int*dev_ev,int*dev_es,int*dev_et)
 {
 
-}
+};
 void parallelor::prepush(int s,int t,int bw)
 {
 	cout<<"prepush ing"<<endl;
-	int W=fls(WD+1);
-	int*dev_h,*dev_v,*dev_ev,*dev_es,*dev_et;
+	/*int W=fls(WD+1);
+	int*dev_mark,*dev_h,*dev_v,*dev_ev,*dev_es,*dev_et;
 	int*h=new int[W*pnodesize];
 	int*v=new int[W*pnodesize];
 	int*ev=new int[pesize];
 	int*es=new int[pesize];
 	int*et=new int[pesize];
+	int*mark=new int;
+	*mark=0;
 	for(int i=0;i<edges.size();i++)
 	{
 		ev[i]=1;
@@ -403,35 +398,21 @@ void parallelor::prepush(int s,int t,int bw)
 		h[i]=W*pnodesize;
 	}
 	cudaMalloc((void**)&dev_h,W*pnodesize*sizeof(int));
+	cudaMalloc((void**)&dev_mark,sizeof(int));
 	cudaMalloc((void**)&dev_v,W*pnodesize*sizeof(int));
 	cudaMalloc((void**)&dev_ev,pesize*sizeof(int));
 	cudaMalloc((void**)&dev_es,pesize*sizeof(int));
 	cudaMalloc((void**)&dev_et,pesize*sizeof(int));
+	cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(ev,dev_ev,pesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(et,dev_et,pesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(es,dev_es,pesize*sizeof(int),cudaMemcpyDeviceToHost);
-	/*vector<vector<int>>nei(nodenum+2,vector<int>());
-	vector<int>height(nodenum+2,0);
-	vector<int>value(nodenum+2,0);
-	vector<int>weight(pesize,1);
-	for(int i=0;i<edges.size();i++)
-	{
-		nei[edges[i].s].push_back(i);
-		nei[edges[i].t].push_back(i);
-	}
-	for(int i=0;i<=WD;i++)
-		height[s+pnodesize*i]=nodenum;
-	for(int j=0;j<nei[s].size();j++)
-		if(edges[nei[s][j]].s==s)
-		{
-			weight[nei[s][j]%pesize]*=-1;
-			value[edges[nei[s][j]].t]=1;
-
-		}
-	int mark=1;
-	int cc=1;
-	cout<<"before mark"<<endl;*/
+	//for(int i=0;i<1000;i++)
+	int block=W*pnodesize/WORK_SIZE;
+	for(int i=0;i<1000;i++)
+	push<< <block+1,WORK_SIZE >> >(dev_h,dev_v,dev_ev,dev_es,dev_et,W,dev_mark);
+	cout<<"finished"<<endl;*/
 
 };

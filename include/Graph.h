@@ -33,6 +33,7 @@ class Graph
         }
         bool prepush(int s,int t,int bw)
         {
+        	cout<<"prepushing"<<endl;
         	router.prepush(s,t,bw);
         }
         virtual ~Graph(){};
@@ -95,7 +96,7 @@ class Graph
                 		pedges.push_back(edge(s,t,1));
                 	}
             }
-            router.init(pedges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            router.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
         };
 };
 class ERGraph:public Graph{
