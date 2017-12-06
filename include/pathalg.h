@@ -10,7 +10,7 @@
 #include"edge.h"
 #define ML 50
 #define BS 5
-#define WD 5
+#define WD 6
 #define inf INT_MAX/2
 using namespace std;
 class pairless {

@@ -101,7 +101,12 @@ class Graph
 };
 class ERGraph:public Graph{
 public:
-    ERGraph(int _n,int _degree,algbase&alg):Graph(_n,_degree,alg){GenGraph();extend();};
+    ERGraph(int _n,int _degree,algbase&alg):Graph(_n,_degree,alg){
+    	cout<<"before gen graph"<<endl;
+    	GenGraph();
+    	cout<<"gen graph success"<<endl;
+    	extend();
+    };
 private:
     virtual void GenGraph(){
         int count = 0;
