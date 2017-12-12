@@ -10,7 +10,7 @@
 #include"edge.h"
 #define ML 50
 #define BS 5
-#define WD 6
+#define WD 8
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -199,7 +199,7 @@ class dijkstor:public algbase{
         		mark=0;
         		for(int i=0;i<nodenum;i++)
 					{
-        				if(value[i]>0&&i%pnodesize!=s&&i%pnodesize!=t)
+        				if(value[i]>0&&i!=s&&i%pnodesize!=t)
 						{
 							int flag=0;
 							int minheight=INT_MAX;

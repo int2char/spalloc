@@ -6,11 +6,11 @@ int main()
     struct timeval starttime, endtime;
     parallelor d=parallelor();
     //dijkstor d=dijkstor();
-    ERGraph graph(800,1,d);
+    ERGraph graph(1000,1,d);
     cout<<"graph init success"<<endl;
     gettimeofday(&starttime,NULL);
     cout<<"prepushing "<<endl;
-    graph.prepush(33,88,1);
+    graph.prepush(33,888,1);
     gettimeofday(&endtime,NULL);
     cout<<"time is:"<<endtime.tv_sec- starttime.tv_sec<<endl;
 }
