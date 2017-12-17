@@ -10,7 +10,7 @@ int main()
     cout<<"graph init success"<<endl;
     gettimeofday(&starttime,NULL);
     cout<<"prepushing "<<endl;
-    graph.prepush(0,888,1);
+    graph.prepush(44,33,1);
     gettimeofday(&endtime,NULL);
     cout<<"time is:"<<endtime.tv_sec- starttime.tv_sec<<endl;
 }
