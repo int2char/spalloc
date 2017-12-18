@@ -95,7 +95,15 @@ class dijkstor:public algbase{
         	rela=relate;
         	edgesize=extenedges.size(),nodenum=ginf.enodesize,pesize=ginf.pesize,pnodesize=ginf.pnodesize;
         	exn2n=ginf.exn2n;
-        	edges=extenedges;
+            vector<edge> exedges;
+            for(int k=0;k<WD;k++)
+            for(int i=0;i<extenedges.size();i++)
+            {
+				int s=extenedges[i].s+pnodesize*k;
+				int t=extenedges[i].t+pnodesize*(k+1);
+            	exedges.push_back(edge(s,t,1));
+            }
+        	edges=exedges;
         	vector<vector<int>>nd(nodenum,vector<int>());
         	neibour=nd;
         	vector<int>ad(nodenum,0);
@@ -184,7 +192,7 @@ class dijkstor:public algbase{
         		odernode.push_back(make_pair(i,order[i]));
         	sort(odernode.begin(),odernode.end(),compare);*/
         	for(int i=0;i<=WD;i++)
-        		height[s+pnodesize*i]=nodenum;
+        		height[s+pnodesize*i]=WD+1;//pnodesize;
 			for(int j=0;j<nei[s].size();j++)
 				if(edges[nei[s][j]].s==s)
 				{
@@ -199,7 +207,7 @@ class dijkstor:public algbase{
         		mark=0;
         		for(int i=0;i<nodenum;i++)
 					{
-        				if(value[i]>0&&i!=s&&i%pnodesize!=t)
+        				if(value[i]>0&&i%pnodesize!=s&&i%pnodesize!=t)
 						{
 							int flag=0;
 							int minheight=INT_MAX;
@@ -213,6 +221,7 @@ class dijkstor:public algbase{
 									minheight=min(minheight,height[to]);
 									if(height[i]==height[to]+1)
 									{
+										//cout<<"pushing "<<i<<"["<<i%pnodesize<<"]"<<"("<<height[i]<<")"<<" to "<<to<<"["<<to%pnodesize<<"]"<<"("<<height[to]<<")"<<endl;
 										value[i]--;
 										value[to]++;
 										weight[nei[i][j]%pesize]*=-1;
@@ -223,6 +232,7 @@ class dijkstor:public algbase{
 							}
 							if(flag==1)
 								{
+									//cout<<"remark "<<i<<endl;
 									height[i]=minheight+1,mark=1;
 								}
 						}

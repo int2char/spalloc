@@ -33,7 +33,7 @@ class Graph
         }
         bool prepush(int s,int t,int bw)
         {
-        	cout<<"prepushing"<<endl;
+        	//cout<<"prepushing"<<endl;
         	router.prepush(s,t,bw);
         }
         virtual ~Graph(){};
@@ -49,7 +49,7 @@ class Graph
         };
         void extend()
         {
-        	cout<<"in extend"<<endl;
+        	//cout<<"in extend"<<endl;
         	cout<<edges.size()<<endl;
         	vector<vector<int>>rs(edges.size(),vector<int>());
         	relate=rs;
@@ -73,19 +73,12 @@ class Graph
 									maxnode=max(s,t);
 							}
 						}
-        	cout<<"out extend"<<endl;
+        	//cout<<"out extend"<<endl;
         	vector<vector<int>>erelate(extenedges.size(),vector<int>());
         	for(int i=0;i<extenedges.size();i++)
         		erelate[i]=relate[exe2e[i]];
             maxedge=extenedges.size()-1;
-            vector<edge> exedges;
-            for(int k=0;k<width;k++)
-            for(int i=0;i<edges.size();i++)
-            {
-				int s=edges[i].s+n*k;
-				int t=edges[i].t+n*(k+1);
-            	exedges.push_back(edge(s,t,1));
-            }
+
             vector<edge> pedges;
             for(int i=0;i<edges.size();i++)
             {
