@@ -259,6 +259,7 @@ void parallelor::init(vector<edge>&extenedges,vector<vector<int>>&relate,ginfo g
 };
 parallelor::parallelor()
 {
+
 };
 vector<int> parallelor:: routalg(int s,int t,int bw)
 {
@@ -552,9 +553,9 @@ void parallelor::prepush(int s,int t,int bw)
 				}
 		}
 	}
-	emark=new int[edges.size()*(W-1)];
+	emark=new int[edges.size()];
 	esign=new int[edges.size()];
-	for(int i=0;i<edges.size()*W;i++)
+	for(int i=0;i<edges.size();i++)
 		emark[i]=INT_MAX;
 	for(int i=0;i<edges.size();i++)
 		esign[i]=edges[i].s;
@@ -609,4 +610,19 @@ void parallelor::prepush(int s,int t,int bw)
 	for(int i=0;i<W*pnodesize;i++)
 		if(v[i]!=0)
 			cout<<i<<" "<<i/W<<" "<<h[i]<<" "<<v[i]<<endl;
+	delete[] h;
+	delete[] minarray;
+	delete[] v;
+	delete[] mark;
+	delete[] neie;
+	delete[] nein;
+	delete[]emark;
+	delete[]esign;
+	cudaFree(dev_h);
+	cudaFree(dev_mark);
+	cudaFree(dev_v);
+	cudaFree(dev_neie);
+	cudaFree(dev_nein);
+	cudaFree(dev_esign);
+	cudaFree(dev_emark);
 };
