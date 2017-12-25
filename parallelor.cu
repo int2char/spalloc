@@ -386,9 +386,9 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 			if(h==dev_h[dev_nein[b+j]]+1&&dev_neie[b+j]*dev_esign[abs(dev_neie[b+j])]>0)
 				{
 					if(dev_neie[b+j]>0)
-						dev_emark[abs(dev_neie[b+j])*(W-1)+offset]=dev_nein[b+j];
+						dev_emark[abs(dev_neie[b+j])]=dev_nein[b+j];
 					else
-						dev_emark[abs(dev_neie[b+j])*(W-1)+offset]=-i;
+						dev_emark[abs(dev_neie[b+j])]=-i;
 					value--;
 				}
 		}
@@ -466,14 +466,7 @@ __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,i
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	if(i>=E)return;
-	int emid=INT_MAX;
-	for(int k=i*W;k<(i+1)*W;k++)
-		if(dev_emark[k]<INT_MAX)
-			{
-				if(dev_emark[k]<emid)
-					emid=dev_emark[k];
-				dev_emark[k]=INT_MAX;
-			}
+	int emid=dev_emark[i];
 	if(emid<INT_MAX)
 	{
 		int s=abs(dev_esign[i])*(W+1)+abs(emid)%(W+1);
@@ -491,6 +484,7 @@ __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,i
 			dev_esign[i]*=-1;
 		}
 	}
+	dev_emark[i]=INT_MAX;
 };
 __global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_neie,int *dev_esign,int max,int W,int s,int t)
 {
@@ -583,37 +577,30 @@ void parallelor::prepush(int s,int t,int bw)
 	cudaMalloc((void**)&dev_neie,W*max*pnodesize*sizeof(int));
 	cudaMalloc((void**)&dev_nein,W*max*pnodesize*sizeof(int));
 	cudaMalloc((void**)&dev_esign,edges.size()*sizeof(int));
-	cudaMalloc((void**)&dev_emark,edges.size()*(W-1)*sizeof(int));
+	cudaMalloc((void**)&dev_emark,edges.size()*sizeof(int));
 	cudaMemcpy(dev_h,h,W*pnodesize*sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_v,v,W*pnodesize*sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_neie,neie,W*max*pnodesize*sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_nein,nein,W*max*pnodesize*sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_esign,esign,edges.size()*sizeof(int),cudaMemcpyHostToDevice);
-	cudaMemcpy(dev_emark,emark,edges.size()*(W-1)*sizeof(int),cudaMemcpyHostToDevice);
+	cudaMemcpy(dev_emark,emark,edges.size()*sizeof(int),cudaMemcpyHostToDevice);
 	*mark=1;
 	int time=0;
 	while(*mark>0)
-	//for(int i=0;i<10;i++)
+	for(int i=0;i<10;i++)
 	{
 		while(*mark>0)
 		{
 			*mark=0;
 			cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
 			push<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
-			aggregate<<<edges.size()*(W-1)/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size()*(W-1),dev_mark);
-			//aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size(),dev_mark);
+			//aggregate<<<edges.size()*(W-1)/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size()*(W-1),dev_mark);
+			aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size(),dev_mark);
 			cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
-			//cout<<"mark is"<<*mark<<endl;
 		}
-		//cout<<"break ing"<<endl;
 		relable<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
-		/*cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
-		cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
-		for(int i=0;i<W*pnodesize;i++)
-			if(v[i]!=0)
-				cout<<i<<" "<<i/W<<" "<<h[i]<<" "<<v[i]<<endl;*/
 		time++;
 	}
 	cout<<"times is :"<<time<<endl;

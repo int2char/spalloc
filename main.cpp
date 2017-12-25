@@ -6,7 +6,7 @@ int main()
     struct timeval starttime, endtime;
     parallelor d=parallelor();
     //dijkstor d=dijkstor();
-    ERGraph graph(800,1,d);
+    ERGraph graph(1000,1,d);
     cout<<"graph init success"<<endl;
     gettimeofday(&starttime,NULL);
     cout<<"prepushing "<<endl;
