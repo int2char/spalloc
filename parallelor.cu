@@ -589,7 +589,6 @@ void parallelor::prepush(int s,int t,int bw)
 	*mark=1;
 	int time=0;
 	while(*mark>0)
-	for(int i=0;i<10;i++)
 	{
 		while(*mark>0)
 		{
