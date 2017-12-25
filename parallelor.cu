@@ -69,14 +69,14 @@ void parallelor::copydata(int s,vector<edge>&edges,int nodenum){
 	cudaMemcpy(dev_pre,pre,sizeof(int)*nodenum,cudaMemcpyHostToDevice);
 };
 void parallelor::dellocate(){
-	delete[]d;
+	/*delete[]d;
 	delete[]pre;
 	delete[]aedges;
 	delete m;
 	cudaFree(dev_edges);
 	cudaFree(dev_m);
 	cudaFree(dev_d);
-	cudaFree(dev_pre);
+	cudaFree(dev_pre);*/
 };
 void parallelor::allocate(int maxn,int maxedge){
 	m=new int;
@@ -400,6 +400,40 @@ __global__ void aggregate(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,in
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	if(i>=E)return;
+	int id=threadIdx.x;
+	int eiid=id/W;
+	int start=eiid*W;
+	int eid=i/W;
+	__shared__ int emids[500];
+	emids[eiid]=INT_MAX;
+	__syncthreads();
+	if(dev_emark[i]<INT_MAX)
+		emids[eiid]=dev_emark[i];
+	__syncthreads();
+	int emid=emids[eiid];
+	if(id==start&&emid<INT_MAX)
+		{
+			int s=abs(dev_esign[eid])*(W+1)+abs(emid)%(W+1);
+			if(emid>0)
+			{	atomicSub(&dev_v[s],1);
+				atomicAdd(&dev_v[abs(emid)],1);
+				*mark=1;
+				dev_esign[eid]*=-1;
+			}
+			else
+			{
+				atomicAdd(&dev_v[s],1);
+				atomicSub(&dev_v[abs(emid)],1);
+				*mark=1;
+				dev_esign[eid]*=-1;
+			}
+		}
+	dev_emark[i]=INT_MAX;
+};
+__global__ void aggregate1(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,int*mark)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	if(i>=E)return;
 	__shared__  int emark[WORK_SIZE];
 	int id=threadIdx.x;
 	emark[id]=dev_emark[i];
@@ -427,6 +461,36 @@ __global__ void aggregate(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,in
 			}
 		}
 	dev_emark[i]=INT_MAX;
+};
+__global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,int*mark)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	if(i>=E)return;
+	int emid=INT_MAX;
+	for(int k=i*W;k<(i+1)*W;k++)
+		if(dev_emark[k]<INT_MAX)
+			{
+				if(dev_emark[k]<emid)
+					emid=dev_emark[k];
+				dev_emark[k]=INT_MAX;
+			}
+	if(emid<INT_MAX)
+	{
+		int s=abs(dev_esign[i])*(W+1)+abs(emid)%(W+1);
+		if(emid>=0)
+		{	atomicSub(&dev_v[s],1);
+			atomicAdd(&dev_v[abs(emid)],1);
+			*mark=1;
+			dev_esign[i]*=-1;
+		}
+		else
+		{
+			atomicAdd(&dev_v[s],1);
+			atomicSub(&dev_v[abs(emid)],1);
+			*mark=1;
+			dev_esign[i]*=-1;
+		}
+	}
 };
 __global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_neie,int *dev_esign,int max,int W,int s,int t)
 {
@@ -528,21 +592,31 @@ void parallelor::prepush(int s,int t,int bw)
 	cudaMemcpy(dev_esign,esign,edges.size()*sizeof(int),cudaMemcpyHostToDevice);
 	cudaMemcpy(dev_emark,emark,edges.size()*(W-1)*sizeof(int),cudaMemcpyHostToDevice);
 	*mark=1;
+	int time=0;
 	while(*mark>0)
+	//for(int i=0;i<10;i++)
 	{
 		while(*mark>0)
 		{
 			*mark=0;
 			cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
 			push<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
-			aggregate<<<W*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,(W-1)*edges.size(),dev_mark);
+			aggregate<<<edges.size()*(W-1)/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size()*(W-1),dev_mark);
+			//aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size(),dev_mark);
 			cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
 			//cout<<"mark is"<<*mark<<endl;
 		}
 		//cout<<"break ing"<<endl;
 		relable<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
+		/*cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+		cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+		for(int i=0;i<W*pnodesize;i++)
+			if(v[i]!=0)
+				cout<<i<<" "<<i/W<<" "<<h[i]<<" "<<v[i]<<endl;*/
+		time++;
 	}
+	cout<<"times is :"<<time<<endl;
 	cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	for(int i=0;i<W*pnodesize;i++)

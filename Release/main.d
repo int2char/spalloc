@@ -22,6 +22,7 @@
     /usr/include/x86_64-linux-gnu/bits/wchar.h \
     /usr/lib/gcc/x86_64-linux-gnu/5/include/stddef.h \
     /usr/include/xlocale.h \
+    /usr/include/x86_64-linux-gnu/bits/wchar2.h \
     /usr/include/c++/5/exception \
     /usr/include/c++/5/bits/atomic_lockfree_defines.h \
     /usr/include/c++/5/bits/exception_ptr.h \
@@ -96,14 +97,19 @@
     /usr/include/x86_64-linux-gnu/sys/select.h \
     /usr/include/x86_64-linux-gnu/bits/select.h \
     /usr/include/x86_64-linux-gnu/bits/sigset.h \
+    /usr/include/x86_64-linux-gnu/bits/select2.h \
     /usr/include/x86_64-linux-gnu/sys/sysmacros.h \
     /usr/include/alloca.h \
+    /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
     /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+    /usr/include/x86_64-linux-gnu/bits/stdlib.h \
     /usr/include/c++/5/cstdio \
     /usr/include/libio.h \
     /usr/include/_G_config.h \
     /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
     /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
+    /usr/include/x86_64-linux-gnu/bits/stdio.h \
+    /usr/include/x86_64-linux-gnu/bits/stdio2.h \
     /usr/include/c++/5/cerrno \
     /usr/include/errno.h \
     /usr/include/x86_64-linux-gnu/bits/errno.h \
@@ -159,8 +165,10 @@
     /usr/include/x86_64-linux-gnu/bits/nan.h \
     /usr/include/x86_64-linux-gnu/bits/mathdef.h \
     /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+    /usr/include/x86_64-linux-gnu/bits/mathinline.h \
     /usr/include/c++/5/csetjmp \
     /usr/include/setjmp.h \
+    /usr/include/x86_64-linux-gnu/bits/setjmp2.h \
     /usr/include/c++/5/csignal \
     /usr/include/signal.h \
     /usr/include/x86_64-linux-gnu/bits/signum.h \
@@ -174,6 +182,7 @@
     /usr/include/c++/5/cstddef \
     /usr/include/c++/5/cstring \
     /usr/include/string.h \
+    /usr/include/x86_64-linux-gnu/bits/string3.h \
     /usr/include/c++/5/ctime \
     /usr/include/c++/5/ccomplex \
     /usr/include/c++/5/complex \
@@ -183,6 +192,7 @@
     /usr/include/c++/5/fenv.h \
     /usr/include/fenv.h \
     /usr/include/x86_64-linux-gnu/bits/fenv.h \
+    /usr/include/x86_64-linux-gnu/bits/fenvinline.h \
     /usr/include/c++/5/cinttypes \
     /usr/include/inttypes.h \
     /usr/include/c++/5/cstdalign \
@@ -363,4 +373,5 @@
     /usr/include/x86_64-linux-gnu/bits/environments.h \
     /usr/include/x86_64-linux-gnu/bits/confname.h \
     /usr/include/getopt.h \
+    /usr/include/x86_64-linux-gnu/bits/unistd.h \
     /usr/include/x86_64-linux-gnu/sys/time.h

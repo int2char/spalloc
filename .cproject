@@ -84,6 +84,10 @@
 								<option id="nvcc.compiler.option.level.1995552307" name="Generate host debug information (-g)" superClass="nvcc.compiler.option.level"/>
 								<option defaultValue="nvcc.compiler.optimization.level.most" id="nvcc.compiler.optimization.level.721482973" name="Optimization Level" superClass="nvcc.compiler.optimization.level" valueType="enumerated"/>
 								<option id="nvcc.compiler.pic.193945722" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
+								<option id="nvcc.compiler.include.paths.750945173" name="Include paths (-I)" superClass="nvcc.compiler.include.paths" valueType="includePath">
+									<listOptionValue builtIn="false" value="/home/zhang/allocate/spalloc/include"/>
+								</option>
+								<option id="nvcc.compiler.cpp11option.221863669" superClass="nvcc.compiler.cpp11option" value="true" valueType="boolean"/>
 								<inputType id="nvcc.compiler.input.cu.366480450" superClass="nvcc.compiler.input.cu"/>
 								<inputType id="nvcc.compiler.input.cpp.1395118296" superClass="nvcc.compiler.input.cpp"/>
 								<inputType id="nvcc.compiler.input.c.672718262" superClass="nvcc.compiler.input.c"/>
