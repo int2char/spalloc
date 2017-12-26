@@ -590,15 +590,11 @@ void parallelor::prepush(int s,int t,int bw)
 	int time=0;
 	while(*mark>0)
 	{
-		while(*mark>0)
-		{
-			*mark=0;
-			cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
-			push<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
-			//aggregate<<<edges.size()*(W-1)/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size()*(W-1),dev_mark);
-			aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size(),dev_mark);
-			cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
-		}
+		*mark=0;
+		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
+		push<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
+		//aggregate<<<edges.size()*(W-1)/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size()*(W-1),dev_mark);
+		aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W-1,edges.size(),dev_mark);
 		relable<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
 		time++;
