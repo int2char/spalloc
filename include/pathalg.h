@@ -187,10 +187,6 @@ class dijkstor:public algbase{
         		nei[edges[i].s].push_back(i);
         		nei[edges[i].t].push_back(i);
         	}
-        	/*vector<pair<int,int>>odernode;
-        	for(int i=0;i<nodenum;i++)
-        		odernode.push_back(make_pair(i,order[i]));
-        	sort(odernode.begin(),odernode.end(),compare);*/
         	for(int i=0;i<=WD;i++)
         		height[s+pnodesize*i]=WD+1;//pnodesize;
 			for(int j=0;j<nei[s].size();j++)
@@ -244,6 +240,11 @@ class dijkstor:public algbase{
         	{
         		cout<<value[pnodesize*i+t]<<endl;
         	}
+        	int count=0;
+        	for(int i=0;i<edges.size();i++)
+        		if(weight[i]<0)
+        			count++;
+        	cout<<"count is: "<<count<<endl;
         }
 };
 class parallelor:public algbase

@@ -10,10 +10,8 @@ int main()
     cout<<"graph init success"<<endl;
     gettimeofday(&starttime,NULL);
     cout<<"prepushing "<<endl;
-    graph.prepush(4,33,1);
+    graph.prepush(0,99,1);
     gettimeofday(&endtime,NULL);
     cout<<"time is:"<<endtime.tv_sec- starttime.tv_sec<<endl;
 }
-//ERGraph graph(100,1,d);
-// gettimeofday(&starttime,NULL);
-//graph.prepush(66,33,1);
+
