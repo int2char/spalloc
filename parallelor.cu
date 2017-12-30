@@ -384,15 +384,14 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 	{
 		if(dev_nein[b+j]<INT_MAX&&value>0)
 		{
-			if((dev_neie[b+j]>0&&dev_esign[abs(dev_neie[b+j])-1]>0)||(dev_neie[b+j]<0&&dev_esign[abs(dev_neie[b+j])-1]<0))
-				if(h==dev_h[dev_nein[b+j]]+1)
-					{
-						if(dev_neie[b+j]>0)
-							dev_emark[dev_neie[b+j]-1]=dev_nein[b+j];
-						else
-							dev_emark[abs(dev_neie[b+j])-1]=i;
-						value--;
-					}
+			if((dev_neie[b+j]^dev_esign[abs(dev_neie[b+j])-1])>0&&h==dev_h[dev_nein[b+j]]+1)
+				{
+					if(dev_neie[b+j]>0)
+						dev_emark[dev_neie[b+j]-1]=dev_nein[b+j];
+					else
+						dev_emark[abs(dev_neie[b+j])-1]=i;
+					value--;
+				}
 		}
 		else
 			break;
@@ -468,7 +467,7 @@ __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,i
 	}
 	dev_emark[i]=INT_MAX;
 };
-__global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_neie,int *dev_esign,int max,int W,int s,int t,int tt)
+__global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_neie,int *dev_esign,int max,int W,int s,int t)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	if(i>=N||dev_v[i]==0||i/W==s||i/W==t)return;
@@ -478,7 +477,7 @@ __global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_
 	{
 		if(dev_nein[b+j]<INT_MAX)
 		{
-			if((dev_neie[b+j]>0&&dev_esign[abs(dev_neie[b+j])-1]>0)||(dev_neie[b+j]<0&&dev_esign[abs(dev_neie[b+j])-1]<0))
+			if((dev_neie[b+j]^dev_esign[abs(dev_neie[b+j])-1])>0)
 				mini=min(mini,dev_h[dev_nein[b+j]]);
 		}
 		else
@@ -572,16 +571,13 @@ void parallelor::prepush(int s,int t,int bw)
 	*mark=1;
 	int time=0;
 	cout<<"max is "<<max<<endl;
-
 	while(*mark>0)
-	//for(int i=0;i<50;i++)
 	{
 		*mark=0;
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
 		push<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
 		aggregate2<<<edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size(),dev_mark);
-		//if(time!=31)
-		relable<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t,time);
+		relable<<<W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		/*cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 		cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 		if(time==31||time==30)
@@ -613,9 +609,7 @@ void parallelor::prepush(int s,int t,int bw)
 				count++;
 		cout<<"count is "<<count<<endl;*/
 		time++;
-		//cout<<time<<endl;
 	}
-	//cout<<"times is :"<<time<<endl;
 	cudaMemcpy(v,dev_v,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(h,dev_h,W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	for(int i=0;i<W*pnodesize;i++)
