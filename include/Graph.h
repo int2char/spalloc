@@ -78,7 +78,6 @@ class Graph
         	for(int i=0;i<extenedges.size();i++)
         		erelate[i]=relate[exe2e[i]];
             maxedge=extenedges.size()-1;
-
             vector<edge> pedges;
             for(int i=0;i<edges.size();i++)
             {

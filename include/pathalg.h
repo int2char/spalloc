@@ -233,6 +233,11 @@ class dijkstor:public algbase{
 								}
 						}
     				}
+        		/*int cont=0;
+        		for(int i=0;i<edges.size();i++)
+        			if(weight[i]<0)
+        				cont++;
+        		cout<<"cont is: "<<cont<<endl;*/
 
         	}
         	cout<<"after mark"<<endl;
