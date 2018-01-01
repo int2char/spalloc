@@ -11,6 +11,7 @@
 #define ML 50
 #define BS 5
 #define WD 8
+#define LY 10
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -188,7 +189,9 @@ class dijkstor:public algbase{
         		nei[edges[i].t].push_back(i);
         	}
         	for(int i=0;i<=WD;i++)
-        		height[s+pnodesize*i]=WD+1;//pnodesize;
+        		height[s+pnodesize*i]=WD+1;
+        	for(int i=1;i<=WD;i++)
+        	    height[s+pnodesize*i]=INT_MAX;
 			for(int j=0;j<nei[s].size();j++)
 				if(edges[nei[s][j]].s==s)
 				{

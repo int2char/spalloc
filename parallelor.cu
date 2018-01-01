@@ -532,9 +532,6 @@ void parallelor::prepush(int s,int t,int bw)
 				}
 		}
 	}
-	/*for(int i=0;i<rawnein[35].size();i++)
-		cout<<nein[35*max+i]<<endl;
-	cout<<"finished!"<<endl;*/
 	emark=new int[edges.size()];
 	esign=new int[edges.size()];
 	for(int i=0;i<edges.size();i++)
@@ -554,6 +551,8 @@ void parallelor::prepush(int s,int t,int bw)
 			}
 	for(int i=s*W;i<s*W+W;i++)
 		h[i]=WD+1;
+	for(int i=s*W+1;i<s*W+W;i++)
+		h[i]=INT_MAX;
 	cudaMalloc((void**)&dev_h,W*pnodesize*sizeof(int));
 	cudaMalloc((void**)&dev_mark,sizeof(int));
 	cudaMalloc((void**)&dev_v,W*pnodesize*sizeof(int));
