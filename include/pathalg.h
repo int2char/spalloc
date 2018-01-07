@@ -11,7 +11,7 @@
 #define ML 50
 #define BS 5
 #define WD 8
-#define LY 10
+#define LY 100
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -97,14 +97,7 @@ class dijkstor:public algbase{
         	edgesize=extenedges.size(),nodenum=ginf.enodesize,pesize=ginf.pesize,pnodesize=ginf.pnodesize;
         	exn2n=ginf.exn2n;
             vector<edge> exedges;
-            for(int k=0;k<WD;k++)
-            for(int i=0;i<extenedges.size();i++)
-            {
-				int s=extenedges[i].s+pnodesize*k;
-				int t=extenedges[i].t+pnodesize*(k+1);
-            	exedges.push_back(edge(s,t,1));
-            }
-        	edges=exedges;
+        	edges=extenedges;
         	vector<vector<int>>nd(nodenum,vector<int>());
         	neibour=nd;
         	vector<int>ad(nodenum,0);
@@ -179,78 +172,91 @@ class dijkstor:public algbase{
         }
         virtual void prepush(int s,int t,int bw)
         {
-        	vector<vector<int>>nei(nodenum+2,vector<int>());
-        	vector<int>height(nodenum+2,0);
-        	vector<int>value(nodenum+2,0);
-        	vector<int>weight(pesize,1);
-        	for(int i=0;i<edges.size();i++)
+        	pesize=edges.size();
+        	int W=WD+1;
+        	nodenum=pnodesize*W;
+        	vector<vector<int>>neie(nodenum*LY,vector<int>());
+        	vector<vector<int>>nein(nodenum*LY,vector<int>());
+        	vector<int>height(nodenum*LY,0);
+        	vector<int>value(nodenum*LY,0);
+        	vector<int>esign(pesize*LY,1);
+        	for(int k=0;k<LY;k++)
         	{
-        		nei[edges[i].s].push_back(i);
-        		nei[edges[i].t].push_back(i);
+        		int startn=k*nodenum;
+        		int starte=k*pesize;
+        		for(int i=0;i<edges.size();i++)
+        			for(int j=0;j<W-1;j++)
+        			{
+        				int s=edges[i].s*W+j+startn;
+        				int t=edges[i].t*W+j+1+startn;
+        				neie[s].push_back(i+1+starte);
+        				neie[t].push_back(-(i+1+starte));
+        				nein[s].push_back(t);
+        				nein[t].push_back(s);
+        			}
         	}
-        	for(int i=0;i<=WD;i++)
-        		height[s+pnodesize*i]=WD+1;
-        	for(int i=1;i<=WD;i++)
-        	    height[s+pnodesize*i]=INT_MAX;
-			for(int j=0;j<nei[s].size();j++)
-				if(edges[nei[s][j]].s==s)
-				{
-					weight[nei[s][j]%pesize]*=-1;
-					value[edges[nei[s][j]].t]=1;
-				}
+        	for(int k=0;k<LY;k++)
+        		{
+        		int startn=k*nodenum;
+        		for(int i=0;i<W;i++)
+        			height[startn+s+pnodesize*i]=W+1;
+        		}
+        	for(int k=0;k<LY;k++)
+        	{
+        		int startn=k*nodenum;
+        		for(int i=1;i<W;i++)
+        			height[startn+s+pnodesize*i]=INT_MAX;
+        	}
+        	for(int k=0;k<LY;k++)
+        			{
+        			for(int i=0;i<edges.size();i++)
+        				if(edges[i].s==s)
+        					{
+        					value[k*W*pnodesize+W*edges[i].t+1]=1;
+        					esign[k*edges.size()+i]*=-1;
+        					}
+        			}
         	int mark=1;
         	int cc=1;
         	cout<<"before mark here"<<endl;
         	while(mark==1)
         	{
         		mark=0;
-        		for(int i=0;i<nodenum;i++)
+        		for(int i=0;i<nodenum*LY;i++)
 					{
         				if(value[i]>0&&i%pnodesize!=s&&i%pnodesize!=t)
 						{
-							int flag=0;
 							int minheight=INT_MAX;
-							for(int j=0;j<nei[i].size();j++)
+							for(int j=0;j<nein[i].size();j++)
 							{
-								int v=(edges[nei[i][j]].s==i)?weight[nei[i][j]%pesize]:-weight[nei[i][j]%pesize];
-								int to=(edges[nei[i][j]].s==i)?edges[nei[i][j]].t:edges[nei[i][j]].s;
-								if(v>0&&value[i]>0)
+								if(value[i]>0&&(esign[abs(neie[i][j])-1]*neie[i][j])>0)
 								{
-									flag=(flag==2)?2:1;
-									minheight=min(minheight,height[to]);
+									int to=nein[i][j];
 									if(height[i]==height[to]+1)
 									{
-										//cout<<"pushing "<<i<<"["<<i%pnodesize<<"]"<<"("<<height[i]<<")"<<" to "<<to<<"["<<to%pnodesize<<"]"<<"("<<height[to]<<")"<<endl;
 										value[i]--;
 										value[to]++;
-										weight[nei[i][j]%pesize]*=-1;
-										flag=2;
+										esign[abs(neie[i][j])-1]*=-1;
 										mark=1;
 									}
+									minheight=min(minheight,height[to]);
 								}
 							}
-							if(flag==1)
-								{
-									//cout<<"remark "<<i<<endl;
-									height[i]=minheight+1,mark=1;
-								}
+							if(value[i]>0&&minheight<INT_MAX)
+								height[i]=minheight+1,mark=1;
 						}
     				}
-        		/*int cont=0;
-        		for(int i=0;i<edges.size();i++)
-        			if(weight[i]<0)
-        				cont++;
-        		cout<<"cont is: "<<cont<<endl;*/
-
         	}
         	cout<<"after mark"<<endl;
-        	for(int i=0;i<=WD;i++)
-        	{
-        		cout<<value[pnodesize*i+t]<<endl;
-        	}
+        	for(int i=0;i<LY*W*pnodesize;i++)
+        		if(value[i]!=0)
+        			{
+        				int bi=i%nodenum;
+        				cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
+        			}
         	int count=0;
-        	for(int i=0;i<edges.size();i++)
-        		if(weight[i]<0)
+        	for(int i=0;i<edges.size()*LY;i++)
+        		if(esign[i]<0)
         			count++;
         	cout<<"count is: "<<count<<endl;
         }
