@@ -8,10 +8,11 @@
 #include<bits/stdc++.h>
 #include <unistd.h>
 #include"edge.h"
+#include<sys/time.h>
 #define ML 50
 #define BS 5
 #define WD 8
-#define LY 100
+#define LY 1000
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -216,9 +217,11 @@ class dijkstor:public algbase{
         					esign[k*edges.size()+i]*=-1;
         					}
         			}
+
+        	time_t start,end;
+        	start=clock();
         	int mark=1;
         	int cc=1;
-        	cout<<"before mark here"<<endl;
         	while(mark==1)
         	{
         		mark=0;
@@ -247,7 +250,9 @@ class dijkstor:public algbase{
 						}
     				}
         	}
-        	cout<<"after mark"<<endl;
+        	end=clock();
+        	cout<<"time is: "<<end-start<<endl;
+        	/*cout<<"after mark"<<endl;
         	for(int i=0;i<LY*W*pnodesize;i++)
         		if(value[i]!=0)
         			{
@@ -258,7 +263,7 @@ class dijkstor:public algbase{
         	for(int i=0;i<edges.size()*LY;i++)
         		if(esign[i]<0)
         			count++;
-        	cout<<"count is: "<<count<<endl;
+        	cout<<"count is: "<<count<<endl;*/
         }
 };
 class parallelor:public algbase

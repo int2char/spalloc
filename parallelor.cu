@@ -506,6 +506,9 @@ void parallelor::prepush(int s,int t,int bw)
 	*mark=1;
 	int time=0;
 	cout<<"max is "<<max<<endl;
+    //struct timeval starttime,endtime;
+	time_t start,end;
+	start=clock();
 	while(*mark>0)
 	{
 		*mark=0;
@@ -516,7 +519,9 @@ void parallelor::prepush(int s,int t,int bw)
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
 		time++;
 	}
-	cudaMemcpy(v,dev_v,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+	end=clock();
+	cout<<"time is: "<<end-start<<endl;
+	/*cudaMemcpy(v,dev_v,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(h,dev_h,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	for(int i=0;i<LY*W*pnodesize;i++)
 		if(v[i]!=0)
@@ -529,7 +534,7 @@ void parallelor::prepush(int s,int t,int bw)
 	for(int i=0;i<edges.size()*LY;i++)
 		if(esign[i]<0)
 			count++;
-	cout<<"count is "<<count<<endl;
+	cout<<"count is "<<count<<endl;*/
 	delete[] h;
 	delete[] minarray;
 	delete[] v;
