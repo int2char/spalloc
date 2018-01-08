@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <cuda.h>
 #include"pathalg.h"
-static const int WORK_SIZE = 256;
+static const int WORK_SIZE = 512;
 __global__ void BFShigh(int t,int *m,int index,epair*nei,int *d,int *chan,int edgesize,int tedgesize,int round,int pnodenum)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -336,7 +336,7 @@ int fls(int x)
 		position=-1;
 	return pow(2,position+1);
 }
-__global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_neie,int*dev_nein,int N,int max,int W,int s,int t)
+__global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_neie,int*dev_nein,int N,int max,int W,int s,int t,int*mark)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int bi=i%N;
@@ -345,22 +345,30 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 	if(i>=N*LY||value==0||bi/W==s||bi/W==t)return;
 	int h=dev_h[i];
 	int b=i*max;
+	int minheight=INT_MAX;
+	int flag=0;
 	for(int j=0;j<max;j++)
 	{
 		if(dev_nein[b+j]<INT_MAX&&value>0)
 		{
-			if((dev_neie[b+j]^dev_esign[abs(dev_neie[b+j])-1])>0&&h==dev_h[dev_nein[b+j]]+1)
+			if((dev_neie[b+j]^dev_esign[abs(dev_neie[b+j])-1])>0)
+			{
+				if(h==dev_h[dev_nein[b+j]]+1)
 				{
+					flag=1;
 					if(dev_neie[b+j]>0)
 						dev_emark[abs(dev_neie[b+j])-1]=dev_nein[b+j];
 					else
 						dev_emark[abs(dev_neie[b+j])-1]=i;
 					value--;
 				}
+				minheight=min(minheight,dev_h[dev_nein[b+j]]);
+			}
 		}
 		else
 			break;
 	}
+	if(value>0&&flag==0){dev_h[i]=minheight+1;*mark=1;}
 };
 __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,int N,int*mark)
 {
@@ -512,28 +520,32 @@ void parallelor::prepush(int s,int t,int bw)
 	{
 		*mark=0;
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
-		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t);
+		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
 		aggregate2<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size(),W*pnodesize,dev_mark);
-		relable<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
+		//relable<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
 		time++;
 	}
 	end=clock();
 	cout<<"GPU time is: "<<end-start<<endl;
-	/*cudaMemcpy(v,dev_v,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+	cudaMemcpy(v,dev_v,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
 	cudaMemcpy(h,dev_h,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+	int flow=0;
 	for(int i=0;i<LY*W*pnodesize;i++)
 		if(v[i]!=0)
 			{
 				int bi=i%(W*pnodesize);
-				cout<<i/(W*pnodesize)<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<h[i]<<" "<<v[i]<<endl;
-			}*/
+				if(bi/W==t)flow++;
+				//cout<<i/(W*pnodesize)<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<h[i]<<" "<<v[i]<<endl;
+			}
 	cudaMemcpy(esign,dev_esign,LY*edges.size()*sizeof(int),cudaMemcpyDeviceToHost);
 	int count=0;
 	for(int i=0;i<edges.size()*LY;i++)
 		if(esign[i]<0)
 			count++;
+	cout<<"flow is"<<flow<<endl;
 	cout<<"count is "<<count<<endl;
+	cout<<"die is "<<time<<endl;
 	delete[] h;
 	delete[] minarray;
 	delete[] v;

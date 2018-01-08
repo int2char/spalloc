@@ -12,7 +12,7 @@
 #define ML 50
 #define BS 5
 #define WD 8
-#define LY 100
+#define LY 10
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -222,7 +222,7 @@ class dijkstor:public algbase{
         	time_t start,end;
         	start=clock();
         	int mark=1;
-        	int cc=1;
+        	int cc=0;
         	while(mark==1)
         	//for(int t=0;t<3000;t++)
         	{
@@ -238,7 +238,6 @@ class dijkstor:public algbase{
 								if(value[i]>0&&(esign[abs(neie[i][j])-1]*neie[i][j])>0)
 								{
 									int to=nein[i][j];
-									minheight=min(minheight,height[to]);
 									if(height[i]==height[to]+1)
 									{
 										value[i]--;
@@ -246,12 +245,16 @@ class dijkstor:public algbase{
 										esign[abs(neie[i][j])-1]*=-1;
 										mark=1;
 									}
+									else
+										minheight=min(minheight,height[to]);
+
 								}
 							}
-							if(value[i]>0&&height[i]<minheight+1)
+							if(value[i]>0)
 								height[i]=minheight+1,mark=1;
 						}
     				}
+        		cc++;
         		/*cout<<"***************"<<endl;
             	for(int i=0;i<LY*W*pnodesize;i++)
             		if(value[i]!=0)
@@ -261,18 +264,23 @@ class dijkstor:public algbase{
             			}*/
         	}
         	end=clock();
-        	cout<<"cpu time is: "<<end-start<<endl;
-        	/*for(int i=0;i<LY*W*pnodesize;i++)
+        	cout<<"CPU time is: "<<end-start<<endl;
+        	int flow=0;
+        	for(int i=0;i<LY*W*pnodesize;i++)
         		if(value[i]!=0)
         			{
+
         				int bi=i%nodenum;
-        				cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
-        			}*/
+        				if(bi/W==t)flow++;
+        				//cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
+        			}
         	int count=0;
         	for(int i=0;i<edges.size()*LY;i++)
         		if(esign[i]<0)
         			count++;
+        	cout<<"flow is: "<<flow<<endl;
         	cout<<"count is: "<<count<<endl;
+        	cout<<"die is: "<<cc<<endl;
         }
 };
 class parallelor:public algbase
