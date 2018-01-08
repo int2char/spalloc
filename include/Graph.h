@@ -26,15 +26,17 @@ class Graph
         int n,width,maxnode,maxedge;
         vector<int>etn2n,exe2e;
         vector<vector<int>>relate,neartable;
-        algbase&router;
+        algbase&router1;
+        algbase&router2;
         bool cookedge(int s,int t,int dbw)
         {
-            router.routalg(s,t,dbw);
+            router1.routalg(s,t,dbw);
         }
         bool prepush(int s,int t,int bw)
         {
         	//cout<<"prepushing"<<endl;
-        	router.prepush(s,t,bw);
+        	router1.prepush(s,t,bw);
+        	router2.prepush(s,t,bw);
         }
         virtual ~Graph(){};
     protected:
@@ -45,7 +47,7 @@ class Graph
             edges.push_back(edge(_t,_s,1));
         };
         virtual void GenGraph()=0;
-        Graph(int _n,int _degree,algbase&alg):n(_n),width(WD),remain(500),etn2n(n*(width+1),-1),maxnode(0),router(alg),neartable(_n,vector<int>()){
+        Graph(int _n,int _degree,algbase&alg1,algbase&alg2):n(_n),width(WD),remain(500),etn2n(n*(width+1),-1),maxnode(0),router1(alg1),router2(alg2),neartable(_n,vector<int>()){
         };
         void extend()
         {
@@ -73,7 +75,6 @@ class Graph
 									maxnode=max(s,t);
 							}
 						}
-        	//cout<<"out extend"<<endl;
         	vector<vector<int>>erelate(extenedges.size(),vector<int>());
         	for(int i=0;i<extenedges.size();i++)
         		erelate[i]=relate[exe2e[i]];
@@ -88,12 +89,13 @@ class Graph
                 		pedges.push_back(edge(s,t,1));
                 	}
             }
-            router.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            router1.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            router2.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
         };
 };
 class ERGraph:public Graph{
 public:
-    ERGraph(int _n,int _degree,algbase&alg):Graph(_n,_degree,alg){
+    ERGraph(int _n,int _degree,algbase&alg1,algbase&alg2):Graph(_n,_degree,alg1,alg2){
     	cout<<"before gen graph"<<endl;
     	GenGraph();
     	cout<<"gen graph success"<<endl;
@@ -123,7 +125,7 @@ private:
 };
 class BAGraph:public Graph{
 public:
-    BAGraph(int _n,int _degree,algbase&alg):Graph(_n,_degree,alg){GenGraph();extend();};
+    BAGraph(int _n,int _degree,algbase&alg1,algbase&alg2):Graph(_n,_degree,alg1,alg2){GenGraph();extend();};
 private:
     virtual void GenGraph(){
         int todu = 0;

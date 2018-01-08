@@ -12,7 +12,7 @@
 #define ML 50
 #define BS 5
 #define WD 8
-#define LY 1000
+#define LY 100
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
@@ -200,34 +200,37 @@ class dijkstor:public algbase{
         		{
         		int startn=k*nodenum;
         		for(int i=0;i<W;i++)
-        			height[startn+s+pnodesize*i]=W+1;
+        			height[startn+s*W+i]=W+1;
         		}
         	for(int k=0;k<LY;k++)
         	{
         		int startn=k*nodenum;
         		for(int i=1;i<W;i++)
-        			height[startn+s+pnodesize*i]=INT_MAX;
+        			height[startn+s*W+i]=INT_MAX;
         	}
         	for(int k=0;k<LY;k++)
-        			{
+        		{
         			for(int i=0;i<edges.size();i++)
         				if(edges[i].s==s)
         					{
-        					value[k*W*pnodesize+W*edges[i].t+1]=1;
-        					esign[k*edges.size()+i]*=-1;
+        					value[k*nodenum+W*edges[i].t+1]=1;
+        					//height[k*nodenum+W*edges[i].t+1]=1;
+        					esign[k*pesize+i]*=-1;
         					}
-        			}
+        		}
 
         	time_t start,end;
         	start=clock();
         	int mark=1;
         	int cc=1;
         	while(mark==1)
+        	//for(int t=0;t<3000;t++)
         	{
         		mark=0;
         		for(int i=0;i<nodenum*LY;i++)
 					{
-        				if(value[i]>0&&i%pnodesize!=s&&i%pnodesize!=t)
+        				int bi=i%nodenum;
+        				if(value[i]>0&&bi/W!=s&&bi/W!=t)
 						{
 							int minheight=INT_MAX;
 							for(int j=0;j<nein[i].size();j++)
@@ -235,6 +238,7 @@ class dijkstor:public algbase{
 								if(value[i]>0&&(esign[abs(neie[i][j])-1]*neie[i][j])>0)
 								{
 									int to=nein[i][j];
+									minheight=min(minheight,height[to]);
 									if(height[i]==height[to]+1)
 									{
 										value[i]--;
@@ -242,28 +246,33 @@ class dijkstor:public algbase{
 										esign[abs(neie[i][j])-1]*=-1;
 										mark=1;
 									}
-									minheight=min(minheight,height[to]);
 								}
 							}
-							if(value[i]>0&&minheight<INT_MAX)
+							if(value[i]>0&&height[i]<minheight+1)
 								height[i]=minheight+1,mark=1;
 						}
     				}
+        		/*cout<<"***************"<<endl;
+            	for(int i=0;i<LY*W*pnodesize;i++)
+            		if(value[i]!=0)
+            			{
+            				int bi=i%nodenum;
+            				cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
+            			}*/
         	}
         	end=clock();
-        	cout<<"time is: "<<end-start<<endl;
-        	/*cout<<"after mark"<<endl;
-        	for(int i=0;i<LY*W*pnodesize;i++)
+        	cout<<"cpu time is: "<<end-start<<endl;
+        	/*for(int i=0;i<LY*W*pnodesize;i++)
         		if(value[i]!=0)
         			{
         				int bi=i%nodenum;
         				cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
-        			}
+        			}*/
         	int count=0;
         	for(int i=0;i<edges.size()*LY;i++)
         		if(esign[i]<0)
         			count++;
-        	cout<<"count is: "<<count<<endl;*/
+        	cout<<"count is: "<<count<<endl;
         }
 };
 class parallelor:public algbase
