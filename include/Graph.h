@@ -7,6 +7,7 @@
 #include"edge.h"
 #include"pathalg.h"
 using namespace std;
+enum SPWAY {NORMAL,ROUTE,ROTATE,ROTATE_DELETE,PUSH};
 struct levelGraph {
     vector<int>startnodes;
     vector<int>startedges;
@@ -15,6 +16,11 @@ struct levelGraph {
     vector<edge>edges;
     vector<vector<edge>>neartable;
     int levelsize;
+};
+struct Edge {
+    int from, to, bandwith;
+    double unit_price;
+    Edge(int f, int t, int b, double up) : from(f), to(t), bandwith(b), unit_price(up) {};
 };
 class Graph
 {
@@ -122,6 +128,10 @@ private:
                     }
                 }
     };
+private:
+    void checkflow(int src,int dst,enum SPWAY cache = NORMAL)
+    {}
+
 };
 class BAGraph:public Graph{
 public:

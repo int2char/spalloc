@@ -135,6 +135,7 @@ void parallelor::init(vector<edge>&extenedges,vector<vector<int>>&relate,ginfo g
 	edgesize=extenedges.size();nodenum=ginf.enodesize;
 	edges=extenedges;
 	pesize=ginf.pesize;pnodesize=ginf.pnodesize;
+	cout<<"out cuda init"<<endl;
 	/*cout<<"es "<<edgesize<<"  pes"<<pesize<<endl;
 	dsize=ML*nodenum,presize=ML*nodenum;
 	neisize=BS*ML*edgesize;
@@ -340,27 +341,23 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int bi=i%N;
-	int k=i/N;
 	int value=dev_v[i];
 	if(i>=N*LY||value==0||bi/W==s||bi/W==t)return;
 	int h=dev_h[i];
 	int b=i*max;
 	int minheight=INT_MAX;
-	int flag=0;
 	for(int j=0;j<max;j++)
 	{
 		if(dev_nein[b+j]<INT_MAX&&value>0)
 		{
-			if((dev_neie[b+j]^dev_esign[abs(dev_neie[b+j])-1])>0)
+			int eid=abs(dev_neie[b+j])-1;
+			if((dev_neie[b+j]^dev_esign[eid])>0)
 			{
 				if(h==dev_h[dev_nein[b+j]]+1)
 				{
-					flag=1;
-					if(dev_neie[b+j]>0)
-						dev_emark[abs(dev_neie[b+j])-1]=dev_nein[b+j];
-					else
-						dev_emark[abs(dev_neie[b+j])-1]=i;
+					dev_emark[eid]=(dev_neie[b+j]>0)?dev_nein[b+j]:i;
 					value--;
+					*mark=1;
 				}
 				minheight=min(minheight,dev_h[dev_nein[b+j]]);
 			}
@@ -368,7 +365,7 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 		else
 			break;
 	}
-	if(value>0&&flag==0){dev_h[i]=minheight+1;*mark=1;}
+	if(value>0&&minheight<INT_MAX){dev_h[i]=minheight+1;*mark=1;}
 };
 __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,int N,int*mark)
 {
@@ -386,7 +383,6 @@ __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,i
 		{	atomicAdd(&dev_v[s],1);
 			atomicSub(&dev_v[emid],1);
 		}
-		*mark=1;
 		dev_esign[i]*=-1;
 	}
 	dev_emark[i]=INT_MAX;
@@ -479,23 +475,17 @@ void parallelor::prepush(int s,int t,int bw)
 	for(int k=0;k<LY;k++)
 		{
 		for(int i=0;i<edges.size();i++)
-				if(edges[i].s==s)
-					{
-						v[k*W*pnodesize+W*edges[i].t+1]=1;
-						esign[k*edges.size()+i]*=-1;
-					}
+			if(edges[i].s==s)
+				{
+				v[k*W*pnodesize+W*edges[i].t+1]=1;
+				esign[k*edges.size()+i]*=-1;
+				}
 		}
 	for(int k=0;k<LY;k++)
 		{
 		int start=k*W*pnodesize;
 		for(int i=s*W;i<s*W+W;i++)
-			h[i+start]=WD+1;
-		}
-	for(int k=0;k<LY;k++)
-		{
-		int start=k*W*pnodesize;
-		for(int i=s*W+1;i<s*W+W;i++)
-			h[i+start]=INT_MAX;
+			h[i+start]=WD;
 		}
 	cudaMalloc((void**)&dev_h,LY*W*pnodesize*sizeof(int));
 	cudaMalloc((void**)&dev_mark,sizeof(int));
@@ -522,8 +512,21 @@ void parallelor::prepush(int s,int t,int bw)
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
 		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
 		aggregate2<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size(),W*pnodesize,dev_mark);
-		//relable<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,W*pnodesize,dev_mark,dev_nein,dev_neie,dev_esign,max,W,s,t);
 		cudaMemcpy(mark,dev_mark,sizeof(int),cudaMemcpyDeviceToHost);
+		/*cudaMemcpy(v,dev_v,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+		cudaMemcpy(h,dev_h,LY*W*pnodesize*sizeof(int),cudaMemcpyDeviceToHost);
+		int flow=0;
+		cout<<"************ "<<time<<endl;
+		for(int i=0;i<LY*W*pnodesize;i++)
+			if(v[i]>0)
+				{
+					int bi=i%(W*pnodesize);
+					if(bi/W==t)flow+=v[i];
+					cout<<i/(W*pnodesize)<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<h[i]<<" "<<v[i]<<endl;
+					/*for(int j=0;j<max;j++)
+						if(nein[i*max+j]<INT_MAX)
+							cout<<neie[i*max+j]<<" "<<abs(neie[i*max+j])-1<<" "<<nein[i*max+j]<<" "<<h[nein[i*max+j]]<<endl;
+				}*/
 		time++;
 	}
 	end=clock();
@@ -535,14 +538,49 @@ void parallelor::prepush(int s,int t,int bw)
 		if(v[i]!=0)
 			{
 				int bi=i%(W*pnodesize);
-				if(bi/W==t)flow++;
-				//cout<<i/(W*pnodesize)<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<h[i]<<" "<<v[i]<<endl;
+				if(bi/W==t)flow+=v[i];
+				cout<<i/(W*pnodesize)<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<h[i]<<" "<<v[i]<<endl;
 			}
 	cudaMemcpy(esign,dev_esign,LY*edges.size()*sizeof(int),cudaMemcpyDeviceToHost);
 	int count=0;
 	for(int i=0;i<edges.size()*LY;i++)
 		if(esign[i]<0)
 			count++;
+	cout<<"resort"<<endl;
+	for(int i=0;i<edges.size()*LY;i++)
+		{
+			if(esign[i]<0)
+			{
+				int sorce=edges[i].t*W;
+				if(sorce/W==t)
+				{
+					int pre=edges[i].s*W;
+					cout<<pre<<" ";
+					while((pre/W)!=s)
+					{
+						int flag=0;
+						for(int h=0;h<W;h++)
+						{
+							pre++;
+							for(int k=0;k<max;k++)
+								{
+									if(nein[pre*max+k]<INT_MAX)
+										if(esign[abs(neie[pre*max+k])-1]<0&&neie[pre*max+k]<0)
+										{
+											esign[abs(neie[pre*max+k])-1]*=-1;
+											pre=edges[abs(neie[pre*max+k])-1].s*W;
+											cout<<pre<<" ";
+											flag=1;
+										}
+										if(flag==1)break;
+								}
+							if(flag==1)break;
+						}
+					}
+					cout<<endl;
+				}
+			}
+		}
 	cout<<"flow is"<<flow<<endl;
 	cout<<"count is "<<count<<endl;
 	cout<<"die is "<<time<<endl;
