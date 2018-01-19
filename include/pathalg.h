@@ -11,7 +11,7 @@
 #include<sys/time.h>
 #define ML 50
 #define BS 5
-#define WD 3
+#define WD 7
 #define LY 1
 #define inf INT_MAX/2
 using namespace std;
@@ -274,7 +274,7 @@ class dijkstor:public algbase{
 
         				int bi=i%nodenum;
         				if(bi/W==t)flow+=value[i];
-        				cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
+        				//cout<<i/nodenum<<" "<<bi<<" "<<bi/W<<" "<<bi%W<<" "<<height[i]<<" "<<value[i]<<endl;
         			}
         	int count=0;
         	for(int i=0;i<edges.size()*LY;i++)

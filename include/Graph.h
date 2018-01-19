@@ -1,6 +1,3 @@
-//
-// Created by root on 17-5-8.
-//
 #ifndef CSPALLOC_GRAPH_H
 #define CSPALLOC_GRAPH_H
 #include<bits/stdc++.h>
@@ -40,7 +37,6 @@ class Graph
         }
         bool prepush(int s,int t,int bw)
         {
-        	//cout<<"prepushing"<<endl;
         	router1.prepush(s,t,bw);
         	router2.prepush(s,t,bw);
         }
@@ -57,7 +53,6 @@ class Graph
         };
         void extend()
         {
-        	//cout<<"in extend"<<endl;
         	cout<<edges.size()<<endl;
         	vector<vector<int>>rs(edges.size(),vector<int>());
         	relate=rs;
@@ -95,8 +90,18 @@ class Graph
                 		pedges.push_back(edge(s,t,1));
                 	}
             }
-            router1.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
-            router2.init(edges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            vector<vector<int>>near(maxnode,vector<int>());
+            for(int i=0;i<edges.size();i++)
+            {
+            	int s=edges[i].s;
+            	near[s].push_back(edges[i].t);
+            }
+            vector<edge>redges;
+            for(int i=0;i<near.size();i++)
+            	for(int j=0;j<near[i].size();j++)
+            		redges.push_back(edge(i,near[i][j],1));
+            router1.init(redges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
+            router2.init(redges,erelate,ginfo(maxedge+1,edges.size(),n,maxnode+1,etn2n));
         };
 };
 class ERGraph:public Graph{
@@ -131,7 +136,6 @@ private:
 private:
     void checkflow(int src,int dst,enum SPWAY cache = NORMAL)
     {}
-
 };
 class BAGraph:public Graph{
 public:

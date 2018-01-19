@@ -9,4 +9,3 @@ int main()
     cout<<"graph finied"<<endl;
     graph.prepush(0,3,1);
 }
-
