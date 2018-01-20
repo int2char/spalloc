@@ -608,7 +608,7 @@ void parallelor::prepush(int s,int t,int bw)
 	st=new int[LY*edges.size()];
 	te=new int[LY*edges.size()];
 	for(int i=0;i<LY*edges.size();i++)
-		emark[i]=0;//INT_MAX;
+		emark[i]=INT_MAX;//0
 	for(int k=0;k<LY;k++)
 		for(int i=0;i<edges.size();i++)
 			{
@@ -665,8 +665,9 @@ void parallelor::prepush(int s,int t,int bw)
 		//cout<<"************"<<endl;
 		*mark=0;
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
-		push1<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
-		aggregate3<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,dev_st,dev_te,dev_h,W,edges.size());
+		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
+		aggregate2<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size());
+		//aggregate3<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,dev_st,dev_te,dev_h,W,edges.size());
 		/*cudaMemcpy(emark,dev_emark,LY*edges.size()*sizeof(int),cudaMemcpyDeviceToHost);
 		for(int i=0;i<LY*edges.size();i++)
 			if(emark[i]>0)
