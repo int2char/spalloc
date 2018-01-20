@@ -345,7 +345,7 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 			{
 				if(dev_emark[eid]>INT_MAX/2&&h==hnbj+1)
 				{
-					dev_emark[eid]+=1;//(ebj>0)?nbj:i;
+					dev_emark[eid]=(ebj>0)?nbj:i;
 					value--;
 					*mark=1;
 				}
@@ -420,14 +420,14 @@ __global__ void aggregate4(int* dev_esign,int* dev_v,int* dev_emark,int* dev_st,
 			}
 		}
 };
-__global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,int N,int*mark)
+__global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	if(i>=E*LY)return;
 	int emid=dev_emark[i];
 	if(emid<INT_MAX)
 	{
-		int s=(abs(dev_esign[i])-1)*W+(emid/N)*N+emid%W-1;
+		int s=abs(dev_esign[i])-2+emid%W;
 		if(dev_esign[i]>0)
 		{	atomicSub(&dev_v[s],1);
 			atomicAdd(&dev_v[emid],1);
@@ -438,8 +438,31 @@ __global__ void aggregate2(int* dev_esign,int*dev_v,int* dev_emark,int W,int E,i
 		}
 		dev_esign[i]*=-1;
 	}
-	dev_emark[i]=1;
+	dev_emark[i]=INT_MAX;
 };
+__global__ void aggregate5(int* dev_esign,int* dev_v,int* dev_emark,int* dev_st,int* dev_te,int*dev_h,int W,int E)
+{
+        int i = threadIdx.x + blockIdx.x*blockDim.x;
+        if(i>=E*LY*W)return;
+        int s,t;
+        int eid=i/W;
+        int k=i%W;
+        if(dev_esign[eid]>0)
+        {
+                s=dev_st[eid];
+                t=dev_te[eid]+1;
+        }
+        else
+        {
+                t=dev_st[eid];
+                s=dev_te[eid]+1;
+        }
+        int h1=dev_h[s+k];
+        int h2=dev_h[t+k];
+        if(dev_v[s+k]>0&&h1==h2+1)
+                dev_emark[eid]=s+k;
+};
+
 __global__ void relable(int*dev_h,int*dev_v,int N,int*mark,int*dev_nein,int*dev_neie,int *dev_esign,int max,int W,int s,int t)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -520,13 +543,13 @@ void parallelor::prepush(int s,int t,int bw)
 	st=new int[LY*edges.size()];
 	te=new int[LY*edges.size()];
 	for(int i=0;i<LY*edges.size();i++)
-		emark[i]=0;
+		emark[i]=INT_MAX;
 	for(int k=0;k<LY;k++)
 		for(int i=0;i<edges.size();i++)
 			{
 				st[i+k*edges.size()]=edges[i].s*W+k*W*pnodesize;
 				te[i+k*edges.size()]=edges[i].t*W+k*W*pnodesize;
-				esign[i+k*edges.size()]=1;
+				esign[i+k*edges.size()]=edges[i].s*W+k*W*pnodesize+1;
 			}
 	for(int i=0;i<W*LY*pnodesize;i++)
 		{
@@ -572,13 +595,13 @@ void parallelor::prepush(int s,int t,int bw)
 	time_t start,end;
 	start=clock();
 	while(*mark>0)
-	//for(int i=0;i<200;i++)
+	//for(int i=0;i<3;i++)
 	{
 		//cout<<"************"<<endl;
 		*mark=0;
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
-		aggregate4<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,dev_st,dev_te,dev_h,W,edges.size());
-		pushrelable<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
+		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
+		aggregate2<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size());
 		/*cudaMemcpy(emark,dev_emark,LY*edges.size()*sizeof(int),cudaMemcpyDeviceToHost);
 		for(int i=0;i<LY*edges.size();i++)
 			if(emark[i]>0)
