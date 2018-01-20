@@ -12,7 +12,7 @@
 #define ML 50
 #define BS 5
 #define WD 7
-#define LY 1
+#define LY 100
 #define inf INT_MAX/2
 using namespace std;
 class pairless {
