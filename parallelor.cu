@@ -357,6 +357,39 @@ __global__ void push(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_n
 	}
 	if(value>0&&minheight<INT_MAX){dev_h[i]=minheight+1;*mark=1;}
 };
+__global__ void push1(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_neie,int*dev_nein,int N,int max,int W,int s,int t,int*mark)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	int bi=i%N;
+	int value=dev_v[i];
+	if(i>=N*LY||value==0||bi/W==s||bi/W==t)return;
+	int h=dev_h[i];
+	int b=i*max;
+	int minheight=INT_MAX;
+	for(int j=0;j<max;j++)
+	{
+		int nbj=dev_nein[b+j];
+		if(value>0&&nbj<INT_MAX)
+		{
+			int ebj=dev_neie[b+j];
+			int hnbj=dev_h[nbj];
+			int eid=abs(ebj)-1;
+			if((ebj^dev_esign[eid])>0)
+			{
+				if(dev_emark[eid]==0&&h==hnbj+1)
+				{
+					dev_emark[eid]++;
+					value--;
+					*mark=1;
+				}
+				minheight=min(minheight,hnbj);
+			}
+		}
+		else
+			break;
+	}
+	if(value>0&&minheight<INT_MAX){dev_h[i]=minheight+1;*mark=1;}
+};
 __global__ void pushrelable(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,int*dev_neie,int*dev_nein,int N,int max,int W,int s,int t,int*mark)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
@@ -392,6 +425,38 @@ __global__ void pushrelable(int*dev_h,int*dev_v,int* dev_esign,int* dev_emark,in
 			break;
 	}
 	if(value>0&&minheight<INT_MAX){dev_h[i]=minheight+1;*mark=1;}
+};
+__global__ void aggregate3(int* dev_esign,int* dev_v,int* dev_emark,int* dev_st,int* dev_te,int*dev_h,int W,int E)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	if(i>=E*LY)return;
+		int s,t;
+	if(dev_emark[i]>0)
+	{
+		if(dev_esign[i]>0)
+		{
+			s=dev_st[i];
+			t=dev_te[i]+1;
+		}
+		else
+		{
+			t=dev_st[i];
+			s=dev_te[i]+1;
+		}
+		for(int k=0;k<W;k++)
+			{
+				int h1=dev_h[s+k];
+				int h2=dev_h[t+k];
+				if(dev_v[s+k]>0&&h1==h2+1)
+				{
+					atomicSub(&dev_v[s+k],1);
+					atomicAdd(&dev_v[t+k],1);
+					dev_esign[i]*=-1;
+					break;
+				}
+			}
+	}
+	dev_emark[i]=0;
 };
 __global__ void aggregate4(int* dev_esign,int* dev_v,int* dev_emark,int* dev_st,int* dev_te,int*dev_h,int W,int E)
 {
@@ -543,7 +608,7 @@ void parallelor::prepush(int s,int t,int bw)
 	st=new int[LY*edges.size()];
 	te=new int[LY*edges.size()];
 	for(int i=0;i<LY*edges.size();i++)
-		emark[i]=INT_MAX;
+		emark[i]=0;//INT_MAX;
 	for(int k=0;k<LY;k++)
 		for(int i=0;i<edges.size();i++)
 			{
@@ -600,8 +665,8 @@ void parallelor::prepush(int s,int t,int bw)
 		//cout<<"************"<<endl;
 		*mark=0;
 		cudaMemcpy(dev_mark,mark,sizeof(int),cudaMemcpyHostToDevice);
-		push<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
-		aggregate2<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,W,edges.size());
+		push1<<<LY*W*pnodesize/WORK_SIZE+1,WORK_SIZE>>>(dev_h,dev_v,dev_esign,dev_emark,dev_neie,dev_nein,W*pnodesize,max,W,s,t,dev_mark);
+		aggregate3<<<LY*edges.size()/WORK_SIZE+1,WORK_SIZE>>>(dev_esign,dev_v,dev_emark,dev_st,dev_te,dev_h,W,edges.size());
 		/*cudaMemcpy(emark,dev_emark,LY*edges.size()*sizeof(int),cudaMemcpyDeviceToHost);
 		for(int i=0;i<LY*edges.size();i++)
 			if(emark[i]>0)
